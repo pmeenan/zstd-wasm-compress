@@ -1,5 +1,5 @@
 
-var ZSTD = (() => {
+var zstd = (() => {
   var _scriptDir = import.meta.url;
   
   return (
@@ -2924,4 +2924,4 @@ run();
 
 );
 })();
-export default ZSTD;
+export default zstd;
