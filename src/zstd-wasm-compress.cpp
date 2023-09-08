@@ -52,7 +52,7 @@ size_t _ZSTD_compress_usingDict(unsigned int ctx, unsigned int dst, size_t dstCa
 }
 
 unsigned int _ZSTD_createCDict(unsigned int dictBuffer, size_t dictSize, int compressionLevel) {
-  return (unsigned int)ZSTD_createCDict((const void*) dictBuffer, dictSize, compressionLevel)
+  return (unsigned int)ZSTD_createCDict((const void*) dictBuffer, dictSize, compressionLevel);
 }
 
 size_t _ZSTD_freeCDict(unsigned int CDict) {
@@ -64,56 +64,56 @@ size_t _ZSTD_compress_usingCDict(unsigned int cctx, unsigned int dst, size_t dst
 }
 
 
-EMSCRIPTEN_BINDINGS(zstd) {
+EMSCRIPTEN_BINDINGS(ZSTD) {
   // Wrapped functions
-	function("ZSTD_compress", &_ZSTD_compress);
-	function("ZSTD_compress2", &_ZSTD_compress2);
-	function("ZSTD_createCCtx", &_ZSTD_createCCtx);
-	function("ZSTD_freeCCtx", &_ZSTD_freeCCtx);
-	function("ZSTD_CCtx_reset", &_ZSTD_CCtx_reset);
-	function("ZSTD_cParam_getBounds_lower", &ZSTD_cParam_getBounds_lower);
-	function("ZSTD_cParam_getBounds_upper", &ZSTD_cParam_getBounds_upper);
-	function("ZSTD_CCtx_setParameter", &_ZSTD_CCtx_setParameter);
-	function("ZSTD_compressCCtx", &_ZSTD_compressCCtx);
+	function("compress", &_ZSTD_compress);
+	function("compress2", &_ZSTD_compress2);
+	function("createCCtx", &_ZSTD_createCCtx);
+	function("freeCCtx", &_ZSTD_freeCCtx);
+	function("CCtx_reset", &_ZSTD_CCtx_reset);
+	function("cParam_getBounds_lower", &ZSTD_cParam_getBounds_lower);
+	function("cParam_getBounds_upper", &ZSTD_cParam_getBounds_upper);
+	function("CCtx_setParameter", &_ZSTD_CCtx_setParameter);
+	function("compressCCtx", &_ZSTD_compressCCtx);
 
-	function("ZSTD_compress_usingDict", &_ZSTD_compress_usingDict);
-	function("ZSTD_createCDict", &_ZSTD_createCDict);
-	function("ZSTD_freeCDict", &_ZSTD_freeCDict);
-	function("ZSTD_compress_usingCDict", &_ZSTD_compress_usingCDict);
+	function("compress_usingDict", &_ZSTD_compress_usingDict);
+	function("createCDict", &_ZSTD_createCDict);
+	function("freeCDict", &_ZSTD_freeCDict);
+	function("compress_usingCDict", &_ZSTD_compress_usingCDict);
 
 	// Helper functions
-	function("ZSTD_compressBound", &ZSTD_compressBound);
-	function("ZSTD_isError", &ZSTD_isError);
-  function("ZSTD_maxCLevel", &ZSTD_maxCLevel);
-	function("ZSTD_versionNumber", &ZSTD_versionNumber);
-	function("ZSTD_CStreamInSize", &ZSTD_CStreamInSize);
-	function("ZSTD_CStreamOutSize", &ZSTD_CStreamOutSize);
+	function("compressBound", &ZSTD_compressBound);
+	function("isError", &ZSTD_isError);
+  function("maxCLevel", &ZSTD_maxCLevel);
+	function("versionNumber", &ZSTD_versionNumber);
+	function("CStreamInSize", &ZSTD_CStreamInSize);
+	function("CStreamOutSize", &ZSTD_CStreamOutSize);
 
   // ZSTD_ResetDirective
-  constant("ZSTD_reset_session_only", ZSTD_reset_session_only);
-  constant("ZSTD_reset_parameters", ZSTD_reset_parameters);
-  constant("ZSTD_reset_session_and_parameters", ZSTD_reset_session_and_parameters);
+  constant("reset_session_only", ZSTD_reset_session_only);
+  constant("reset_parameters", ZSTD_reset_parameters);
+  constant("reset_session_and_parameters", ZSTD_reset_session_and_parameters);
 
   // ZSTD_EndDirective
-  constant("ZSTD_e_continue", ZSTD_e_continue);
-  constant("ZSTD_e_flush", ZSTD_e_flush);
-  constant("ZSTD_e_end", ZSTD_e_end);
+  constant("e_continue", ZSTD_e_continue);
+  constant("e_flush", ZSTD_e_flush);
+  constant("e_end", ZSTD_e_end);
 
   // ZSTD_cParameter
-  constant("ZSTD_c_compressionLevel", ZSTD_c_compressionLevel);
-  constant("ZSTD_c_windowLog", ZSTD_c_windowLog);
-  constant("ZSTD_c_hashLog", ZSTD_c_hashLog);
-  constant("ZSTD_c_chainLog", ZSTD_c_chainLog);
-  constant("ZSTD_c_searchLog", ZSTD_c_searchLog);
-  constant("ZSTD_c_minMatch", ZSTD_c_minMatch);
-  constant("ZSTD_c_targetLength", ZSTD_c_targetLength);
-  constant("ZSTD_c_strategy", ZSTD_c_strategy);
-  constant("ZSTD_c_enableLongDistanceMatching", ZSTD_c_enableLongDistanceMatching);
-  constant("ZSTD_c_ldmHashLog", ZSTD_c_ldmHashLog);
-  constant("ZSTD_c_ldmMinMatch", ZSTD_c_ldmMinMatch);
-  constant("ZSTD_c_ldmBucketSizeLog", ZSTD_c_ldmBucketSizeLog);
-  constant("ZSTD_c_ldmHashRateLog", ZSTD_c_ldmHashRateLog);
-  constant("ZSTD_c_contentSizeFlag", ZSTD_c_contentSizeFlag);
-  constant("ZSTD_c_checksumFlag", ZSTD_c_checksumFlag);
-  constant("ZSTD_c_dictIDFlag", ZSTD_c_dictIDFlag);
+  constant("c_compressionLevel", ZSTD_c_compressionLevel);
+  constant("c_windowLog", ZSTD_c_windowLog);
+  constant("c_hashLog", ZSTD_c_hashLog);
+  constant("c_chainLog", ZSTD_c_chainLog);
+  constant("c_searchLog", ZSTD_c_searchLog);
+  constant("c_minMatch", ZSTD_c_minMatch);
+  constant("c_targetLength", ZSTD_c_targetLength);
+  constant("c_strategy", ZSTD_c_strategy);
+  constant("c_enableLongDistanceMatching", ZSTD_c_enableLongDistanceMatching);
+  constant("c_ldmHashLog", ZSTD_c_ldmHashLog);
+  constant("c_ldmMinMatch", ZSTD_c_ldmMinMatch);
+  constant("c_ldmBucketSizeLog", ZSTD_c_ldmBucketSizeLog);
+  constant("c_ldmHashRateLog", ZSTD_c_ldmHashRateLog);
+  constant("c_contentSizeFlag", ZSTD_c_contentSizeFlag);
+  constant("c_checksumFlag", ZSTD_c_checksumFlag);
+  constant("c_dictIDFlag", ZSTD_c_dictIDFlag);
 }
