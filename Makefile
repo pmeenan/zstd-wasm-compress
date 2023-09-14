@@ -4,3 +4,4 @@ all:
 	emcc --bind -I ./zstd/lib/ src/zstd-wasm-compress.cpp -o ./bin/zstdlib.js zstd/lib/libzstd.a -s EXPORT_ES6=1 -s MODULARIZE -s ENVIRONMENT="web" -s EXPORTED_RUNTIME_METHODS='["cwrap", "setValue"]' -s ALLOW_MEMORY_GROWTH=1 -s EXPORT_NAME="zstdlib"
 clean:
 	$(MAKE) -C zstd clean
+	rm -rf ./bin/*
