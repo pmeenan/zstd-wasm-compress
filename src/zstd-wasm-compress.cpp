@@ -64,7 +64,7 @@ size_t _ZSTD_compress_usingCDict(unsigned int cctx, unsigned int dst, size_t dst
 }
 
 
-EMSCRIPTEN_BINDINGS(zstd) {
+EMSCRIPTEN_BINDINGS(zstdwasm) {
   // Wrapped functions
 	function("compress", &_ZSTD_compress);
 	function("compress2", &_ZSTD_compress2);
