@@ -50,8 +50,9 @@ var ENVIRONMENT_IS_SHELL = false;
 // include: /home/pmeenan/src/zstd-wasm-compress/src/pre.js
 //small stub to include things in scope that emscripten needs to be happy.
 //the 'web' target is the closest to the workers api
-//(not the 'worker' target) so we have to add things like document
+//(not the 'worker' target) so we have to add things like document and window
 const document = this;
+const window = {};
 // end include: /home/pmeenan/src/zstd-wasm-compress/src/pre.js
 
 
