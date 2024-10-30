@@ -3,6 +3,7 @@
 #include <string.h>    // strlen, strcat, memset, strerror
 #include <errno.h>     // errno
 #include <sys/stat.h>  // stat
+#define ZSTD_STATIC_LINKING_ONLY
 #include <zstd.h>      // presumes zstd library is installed
 
 #include <emscripten.h>
@@ -63,6 +64,10 @@ size_t _ZSTD_compress_usingCDict(unsigned int cctx, unsigned int dst, size_t dst
   return ZSTD_compress_usingCDict((ZSTD_CCtx*) cctx, (void*) dst, dstCapacity, (const void*) src, srcSize, (const ZSTD_CDict*) cdict);
 }
 
+unsigned int _ZSTD_createCDict_byReference(unsigned int dictBuffer, size_t dictSize, int compressionLevel) {
+  return (unsigned int)ZSTD_createCDict_byReference((const void*)dictBuffer, dictSize, compressionLevel);
+}
+
 
 EMSCRIPTEN_BINDINGS(zstdwasm) {
   // Wrapped functions
@@ -80,6 +85,7 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
 	function("createCDict", &_ZSTD_createCDict);
 	function("freeCDict", &_ZSTD_freeCDict);
 	function("compress_usingCDict", &_ZSTD_compress_usingCDict);
+	function("createCDict_byReference", &_ZSTD_createCDict_byReference);
 
 	// Helper functions
 	function("compressBound", &ZSTD_compressBound);
