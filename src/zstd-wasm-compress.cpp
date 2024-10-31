@@ -47,6 +47,10 @@ size_t _ZSTD_compress2(unsigned int cctx, unsigned int dst, size_t dstCapacity, 
   return ZSTD_compress2((ZSTD_CCtx*) cctx, (void*) dst, dstCapacity, (const void*) src, srcSize);
 }
 
+size_t _ZSTD_compressStream2(unsigned int cctx, unsigned int output, unsigned int input, ZSTD_EndDirective endOp) {
+  return ZSTD_compressStream2( (ZSTD_CCtx*) cctx, (ZSTD_outBuffer*) output, (ZSTD_inBuffer*) input, endOp);
+}
+
 // Dictionary
 size_t _ZSTD_compress_usingDict(unsigned int ctx, unsigned int dst, size_t dstCapacity, unsigned int src, size_t srcSize, unsigned int dict,size_t dictSize, int compressionLevel) {
   return ZSTD_compress_usingDict((ZSTD_CCtx*) ctx, (void*) dst, dstCapacity, (const void*) src, srcSize, (const void*) dict, dictSize, compressionLevel);
@@ -68,6 +72,11 @@ unsigned int _ZSTD_createCDict_byReference(unsigned int dictBuffer, size_t dictS
   return (unsigned int)ZSTD_createCDict_byReference((const void*)dictBuffer, dictSize, compressionLevel);
 }
 
+size_t _ZSTD_CCtx_refCDict(unsigned int cctx, unsigned int cdict) {
+  return ZSTD_CCtx_refCDict((ZSTD_CCtx*) cctx, (const ZSTD_CDict*)cdict);
+}
+
+// Structure setters/getters
 static unsigned int ZSTD_inBuffer_src_getter(const ZSTD_inBuffer &inBuffer) {
     return (unsigned int)inBuffer.src;
 }
@@ -95,12 +104,14 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
 	function("cParam_getBounds_upper", &ZSTD_cParam_getBounds_upper);
 	function("CCtx_setParameter", &_ZSTD_CCtx_setParameter);
 	function("compressCCtx", &_ZSTD_compressCCtx);
+  function("compressStream2", &_ZSTD_compressStream2);
 
 	function("compress_usingDict", &_ZSTD_compress_usingDict);
 	function("createCDict", &_ZSTD_createCDict);
 	function("freeCDict", &_ZSTD_freeCDict);
 	function("compress_usingCDict", &_ZSTD_compress_usingCDict);
 	function("createCDict_byReference", &_ZSTD_createCDict_byReference);
+	function("CCtx_refCDict", &_ZSTD_CCtx_refCDict);
 
 	// Helper functions
 	function("compressBound", &ZSTD_compressBound);
