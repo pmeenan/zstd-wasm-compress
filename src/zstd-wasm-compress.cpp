@@ -76,6 +76,10 @@ size_t _ZSTD_CCtx_refCDict(unsigned int cctx, unsigned int cdict) {
   return ZSTD_CCtx_refCDict((ZSTD_CCtx*) cctx, (const ZSTD_CDict*)cdict);
 }
 
+size_t _ZSTD_CCtx_refPrefix(unsigned int cctx, unsigned int prefix, size_t prefixSize) {
+  return ZSTD_CCtx_refPrefix((ZSTD_CCtx*) cctx, (const void*) prefix, prefixSize);
+}
+
 // Structure setters/getters
 static unsigned int ZSTD_inBuffer_src_getter(const ZSTD_inBuffer &inBuffer) {
     return (unsigned int)inBuffer.src;
@@ -112,6 +116,7 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
 	function("compress_usingCDict", &_ZSTD_compress_usingCDict);
 	function("createCDict_byReference", &_ZSTD_createCDict_byReference);
 	function("CCtx_refCDict", &_ZSTD_CCtx_refCDict);
+  function("CCtx_refPrefix", &_ZSTD_CCtx_refPrefix);
 
 	// Helper functions
 	function("compressBound", &ZSTD_compressBound);
