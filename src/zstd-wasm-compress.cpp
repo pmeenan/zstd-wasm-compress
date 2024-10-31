@@ -122,42 +122,43 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
 	function("CStreamOutSize", &ZSTD_CStreamOutSize);
 
   // ZSTD_ResetDirective
-  constant("reset_session_only", ZSTD_reset_session_only);
-  constant("reset_parameters", ZSTD_reset_parameters);
-  constant("reset_session_and_parameters", ZSTD_reset_session_and_parameters);
+  enum_<ZSTD_ResetDirective>("ResetDirective")
+    .value("reset_session_only", ZSTD_ResetDirective::ZSTD_reset_session_only)
+    .value("reset_parameters", ZSTD_ResetDirective::ZSTD_reset_parameters)
+    .value("reset_session_and_parameters", ZSTD_ResetDirective::ZSTD_reset_session_and_parameters);
 
   // ZSTD_EndDirective
-  constant("e_continue", ZSTD_e_continue);
-  constant("e_flush", ZSTD_e_flush);
-  constant("e_end", ZSTD_e_end);
+  enum_<ZSTD_EndDirective>("EndDirective")
+    .value("e_continue", ZSTD_EndDirective::ZSTD_e_continue)
+    .value("e_flush", ZSTD_EndDirective::ZSTD_e_flush)
+    .value("e_end", ZSTD_EndDirective::ZSTD_e_end);
 
   // ZSTD_cParameter
-  constant("c_compressionLevel", ZSTD_c_compressionLevel);
-  constant("c_windowLog", ZSTD_c_windowLog);
-  constant("c_hashLog", ZSTD_c_hashLog);
-  constant("c_chainLog", ZSTD_c_chainLog);
-  constant("c_searchLog", ZSTD_c_searchLog);
-  constant("c_minMatch", ZSTD_c_minMatch);
-  constant("c_targetLength", ZSTD_c_targetLength);
-  constant("c_strategy", ZSTD_c_strategy);
-  constant("c_enableLongDistanceMatching", ZSTD_c_enableLongDistanceMatching);
-  constant("c_ldmHashLog", ZSTD_c_ldmHashLog);
-  constant("c_ldmMinMatch", ZSTD_c_ldmMinMatch);
-  constant("c_ldmBucketSizeLog", ZSTD_c_ldmBucketSizeLog);
-  constant("c_ldmHashRateLog", ZSTD_c_ldmHashRateLog);
-  constant("c_contentSizeFlag", ZSTD_c_contentSizeFlag);
-  constant("c_checksumFlag", ZSTD_c_checksumFlag);
-  constant("c_dictIDFlag", ZSTD_c_dictIDFlag);
+  enum_<ZSTD_cParameter>("cParameter")
+    .value("c_compressionLevel", ZSTD_cParameter::ZSTD_c_compressionLevel)
+    .value("c_windowLog", ZSTD_cParameter::ZSTD_c_windowLog)
+    .value("c_hashLog", ZSTD_cParameter::ZSTD_c_hashLog)
+    .value("c_chainLog", ZSTD_cParameter::ZSTD_c_chainLog)
+    .value("c_searchLog", ZSTD_cParameter::ZSTD_c_searchLog)
+    .value("c_minMatch", ZSTD_cParameter::ZSTD_c_minMatch)
+    .value("c_targetLength", ZSTD_cParameter::ZSTD_c_targetLength)
+    .value("c_strategy", ZSTD_cParameter::ZSTD_c_strategy)
+    .value("c_enableLongDistanceMatching", ZSTD_cParameter::ZSTD_c_enableLongDistanceMatching)
+    .value("c_ldmHashLog", ZSTD_cParameter::ZSTD_c_ldmHashLog)
+    .value("c_ldmMinMatch", ZSTD_cParameter::ZSTD_c_ldmMinMatch)
+    .value("c_ldmBucketSizeLog", ZSTD_cParameter::ZSTD_c_ldmBucketSizeLog)
+    .value("c_ldmHashRateLog", ZSTD_cParameter::ZSTD_c_ldmHashRateLog)
+    .value("c_contentSizeFlag", ZSTD_cParameter::ZSTD_c_contentSizeFlag)
+    .value("c_checksumFlag", ZSTD_cParameter::ZSTD_c_checksumFlag)
+    .value("c_dictIDFlag", ZSTD_cParameter::ZSTD_c_dictIDFlag);
 
   // Structures
   class_<ZSTD_inBuffer>("inBuffer")
     .property("src", &ZSTD_inBuffer_src_getter, &ZSTD_inBuffer_src_setter)
     .property("size", &ZSTD_inBuffer::size)
-    .property("pos", &ZSTD_inBuffer::pos)
-    ;
+    .property("pos", &ZSTD_inBuffer::pos);
   class_<ZSTD_outBuffer>("outBuffer")
     .property("dst", &ZSTD_outBuffer_dst_getter, &ZSTD_outBuffer_dst_setter)
     .property("size", &ZSTD_outBuffer::size)
-    .property("pos", &ZSTD_outBuffer::pos)
-    ;
+    .property("pos", &ZSTD_outBuffer::pos);
 }
