@@ -47,8 +47,8 @@ size_t _ZSTD_compress2(unsigned int cctx, unsigned int dst, size_t dstCapacity, 
   return ZSTD_compress2((ZSTD_CCtx*) cctx, (void*) dst, dstCapacity, (const void*) src, srcSize);
 }
 
-size_t _ZSTD_compressStream2(unsigned int cctx, unsigned int output, unsigned int input, ZSTD_EndDirective endOp) {
-  return ZSTD_compressStream2( (ZSTD_CCtx*) cctx, (ZSTD_outBuffer*) output, (ZSTD_inBuffer*) input, endOp);
+size_t _ZSTD_compressStream2(unsigned int cctx, ZSTD_outBuffer &output, ZSTD_inBuffer &input, ZSTD_EndDirective endOp) {
+  return ZSTD_compressStream2( (ZSTD_CCtx*) cctx, &output, &input, endOp);
 }
 
 // Dictionary
