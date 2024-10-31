@@ -1933,6 +1933,15 @@ function dbg(...args) {
       );
     };
 
+  var heap32VectorToArray = (count, firstElement) => {
+      var array = [];
+      for (var i = 0; i < count; i++) {
+        // TODO(https://github.com/emscripten-core/emscripten/issues/17310):
+        // Find a way to hoist the `>> 2` or `>> 3` out of this loop.
+        array.push(HEAPU32[(((firstElement)+(i * 4))>>2)]);
+      }
+      return array;
+    };
   
   
   var runDestructors = (destructors) => {
@@ -1942,6 +1951,156 @@ function dbg(...args) {
         del(ptr);
       }
     };
+  
+  
+  
+  
+  
+  
+  
+  function usesDestructorStack(argTypes) {
+      // Skip return value at index 0 - it's not deleted here.
+      for (var i = 1; i < argTypes.length; ++i) {
+        // The type does not define a destructor function - must use dynamic stack
+        if (argTypes[i] !== null && argTypes[i].destructorFunction === undefined) {
+          return true;
+        }
+      }
+      return false;
+    }
+  
+  function getRequiredArgCount(argTypes) {
+      var requiredArgCount = argTypes.length - 2;
+      for (var i = argTypes.length - 1; i >= 2; --i) {
+        if (!argTypes[i].optional) {
+          break;
+        }
+        requiredArgCount--;
+      }
+      return requiredArgCount;
+    }
+  
+  function checkArgCount(numArgs, minArgs, maxArgs, humanName, throwBindingError) {
+      if (numArgs < minArgs || numArgs > maxArgs) {
+        var argCountMessage = minArgs == maxArgs ? minArgs : `${minArgs} to ${maxArgs}`;
+        throwBindingError(`function ${humanName} called with ${numArgs} arguments, expected ${argCountMessage}`);
+      }
+    }
+  function craftInvokerFunction(humanName, argTypes, classType, cppInvokerFunc, cppTargetFunc, /** boolean= */ isAsync) {
+      // humanName: a human-readable string name for the function to be generated.
+      // argTypes: An array that contains the embind type objects for all types in the function signature.
+      //    argTypes[0] is the type object for the function return value.
+      //    argTypes[1] is the type object for function this object/class type, or null if not crafting an invoker for a class method.
+      //    argTypes[2...] are the actual function parameters.
+      // classType: The embind type object for the class to be bound, or null if this is not a method of a class.
+      // cppInvokerFunc: JS Function object to the C++-side function that interops into C++ code.
+      // cppTargetFunc: Function pointer (an integer to FUNCTION_TABLE) to the target C++ function the cppInvokerFunc will end up calling.
+      // isAsync: Optional. If true, returns an async function. Async bindings are only supported with JSPI.
+      var argCount = argTypes.length;
+  
+      if (argCount < 2) {
+        throwBindingError("argTypes array size mismatch! Must at least get return value and 'this' types!");
+      }
+  
+      assert(!isAsync, 'Async bindings are only supported with JSPI.');
+  
+      var isClassMethodFunc = (argTypes[1] !== null && classType !== null);
+  
+      // Free functions with signature "void function()" do not need an invoker that marshalls between wire types.
+  // TODO: This omits argument count check - enable only at -O3 or similar.
+  //    if (ENABLE_UNSAFE_OPTS && argCount == 2 && argTypes[0].name == "void" && !isClassMethodFunc) {
+  //       return FUNCTION_TABLE[fn];
+  //    }
+  
+      // Determine if we need to use a dynamic stack to store the destructors for the function parameters.
+      // TODO: Remove this completely once all function invokers are being dynamically generated.
+      var needsDestructorStack = usesDestructorStack(argTypes);
+  
+      var returns = (argTypes[0].name !== "void");
+  
+      var expectedArgCount = argCount - 2;
+      var minArgs = getRequiredArgCount(argTypes);
+      var argsWired = new Array(expectedArgCount);
+      var invokerFuncArgs = [];
+      var destructors = [];
+      var invokerFn = function(...args) {
+        checkArgCount(args.length, minArgs, expectedArgCount, humanName, throwBindingError);
+        destructors.length = 0;
+        var thisWired;
+        invokerFuncArgs.length = isClassMethodFunc ? 2 : 1;
+        invokerFuncArgs[0] = cppTargetFunc;
+        if (isClassMethodFunc) {
+          thisWired = argTypes[1]['toWireType'](destructors, this);
+          invokerFuncArgs[1] = thisWired;
+        }
+        for (var i = 0; i < expectedArgCount; ++i) {
+          argsWired[i] = argTypes[i + 2]['toWireType'](destructors, args[i]);
+          invokerFuncArgs.push(argsWired[i]);
+        }
+  
+        var rv = cppInvokerFunc(...invokerFuncArgs);
+  
+        function onDone(rv) {
+          if (needsDestructorStack) {
+            runDestructors(destructors);
+          } else {
+            for (var i = isClassMethodFunc ? 1 : 2; i < argTypes.length; i++) {
+              var param = i === 1 ? thisWired : argsWired[i - 2];
+              if (argTypes[i].destructorFunction !== null) {
+                argTypes[i].destructorFunction(param);
+              }
+            }
+          }
+  
+          if (returns) {
+            return argTypes[0]['fromWireType'](rv);
+          }
+        }
+  
+        return onDone(rv);
+      };
+      return createNamedFunction(humanName, invokerFn);
+    }
+  var __embind_register_class_constructor = (
+      rawClassType,
+      argCount,
+      rawArgTypesAddr,
+      invokerSignature,
+      invoker,
+      rawConstructor
+    ) => {
+      assert(argCount > 0);
+      var rawArgTypes = heap32VectorToArray(argCount, rawArgTypesAddr);
+      invoker = embind__requireFunction(invokerSignature, invoker);
+      var args = [rawConstructor];
+      var destructors = [];
+  
+      whenDependentTypesAreResolved([], [rawClassType], (classType) => {
+        classType = classType[0];
+        var humanName = `constructor ${classType.name}`;
+  
+        if (undefined === classType.registeredClass.constructor_body) {
+          classType.registeredClass.constructor_body = [];
+        }
+        if (undefined !== classType.registeredClass.constructor_body[argCount - 1]) {
+          throw new BindingError(`Cannot register multiple constructors with identical number of parameters (${argCount-1}) for class '${classType.name}'! Overload resolution is currently only performed using the parameter count, not actual type info!`);
+        }
+        classType.registeredClass.constructor_body[argCount - 1] = () => {
+          throwUnboundTypeError(`Cannot construct ${classType.name} due to unbound types`, rawArgTypes);
+        };
+  
+        whenDependentTypesAreResolved([], rawArgTypes, (argTypes) => {
+          // Insert empty slot for context type (argTypes[1]).
+          argTypes.splice(1, 0, null);
+          classType.registeredClass.constructor_body[argCount - 1] = craftInvokerFunction(humanName, argTypes, null, invoker, rawConstructor);
+          return [];
+        });
+        return [];
+      });
+    };
+
+  
+  
   
   
   
@@ -2212,121 +2371,6 @@ function dbg(...args) {
 
   
   
-  
-  function usesDestructorStack(argTypes) {
-      // Skip return value at index 0 - it's not deleted here.
-      for (var i = 1; i < argTypes.length; ++i) {
-        // The type does not define a destructor function - must use dynamic stack
-        if (argTypes[i] !== null && argTypes[i].destructorFunction === undefined) {
-          return true;
-        }
-      }
-      return false;
-    }
-  
-  function getRequiredArgCount(argTypes) {
-      var requiredArgCount = argTypes.length - 2;
-      for (var i = argTypes.length - 1; i >= 2; --i) {
-        if (!argTypes[i].optional) {
-          break;
-        }
-        requiredArgCount--;
-      }
-      return requiredArgCount;
-    }
-  
-  function checkArgCount(numArgs, minArgs, maxArgs, humanName, throwBindingError) {
-      if (numArgs < minArgs || numArgs > maxArgs) {
-        var argCountMessage = minArgs == maxArgs ? minArgs : `${minArgs} to ${maxArgs}`;
-        throwBindingError(`function ${humanName} called with ${numArgs} arguments, expected ${argCountMessage}`);
-      }
-    }
-  function craftInvokerFunction(humanName, argTypes, classType, cppInvokerFunc, cppTargetFunc, /** boolean= */ isAsync) {
-      // humanName: a human-readable string name for the function to be generated.
-      // argTypes: An array that contains the embind type objects for all types in the function signature.
-      //    argTypes[0] is the type object for the function return value.
-      //    argTypes[1] is the type object for function this object/class type, or null if not crafting an invoker for a class method.
-      //    argTypes[2...] are the actual function parameters.
-      // classType: The embind type object for the class to be bound, or null if this is not a method of a class.
-      // cppInvokerFunc: JS Function object to the C++-side function that interops into C++ code.
-      // cppTargetFunc: Function pointer (an integer to FUNCTION_TABLE) to the target C++ function the cppInvokerFunc will end up calling.
-      // isAsync: Optional. If true, returns an async function. Async bindings are only supported with JSPI.
-      var argCount = argTypes.length;
-  
-      if (argCount < 2) {
-        throwBindingError("argTypes array size mismatch! Must at least get return value and 'this' types!");
-      }
-  
-      assert(!isAsync, 'Async bindings are only supported with JSPI.');
-  
-      var isClassMethodFunc = (argTypes[1] !== null && classType !== null);
-  
-      // Free functions with signature "void function()" do not need an invoker that marshalls between wire types.
-  // TODO: This omits argument count check - enable only at -O3 or similar.
-  //    if (ENABLE_UNSAFE_OPTS && argCount == 2 && argTypes[0].name == "void" && !isClassMethodFunc) {
-  //       return FUNCTION_TABLE[fn];
-  //    }
-  
-      // Determine if we need to use a dynamic stack to store the destructors for the function parameters.
-      // TODO: Remove this completely once all function invokers are being dynamically generated.
-      var needsDestructorStack = usesDestructorStack(argTypes);
-  
-      var returns = (argTypes[0].name !== "void");
-  
-      var expectedArgCount = argCount - 2;
-      var minArgs = getRequiredArgCount(argTypes);
-      var argsWired = new Array(expectedArgCount);
-      var invokerFuncArgs = [];
-      var destructors = [];
-      var invokerFn = function(...args) {
-        checkArgCount(args.length, minArgs, expectedArgCount, humanName, throwBindingError);
-        destructors.length = 0;
-        var thisWired;
-        invokerFuncArgs.length = isClassMethodFunc ? 2 : 1;
-        invokerFuncArgs[0] = cppTargetFunc;
-        if (isClassMethodFunc) {
-          thisWired = argTypes[1]['toWireType'](destructors, this);
-          invokerFuncArgs[1] = thisWired;
-        }
-        for (var i = 0; i < expectedArgCount; ++i) {
-          argsWired[i] = argTypes[i + 2]['toWireType'](destructors, args[i]);
-          invokerFuncArgs.push(argsWired[i]);
-        }
-  
-        var rv = cppInvokerFunc(...invokerFuncArgs);
-  
-        function onDone(rv) {
-          if (needsDestructorStack) {
-            runDestructors(destructors);
-          } else {
-            for (var i = isClassMethodFunc ? 1 : 2; i < argTypes.length; i++) {
-              var param = i === 1 ? thisWired : argsWired[i - 2];
-              if (argTypes[i].destructorFunction !== null) {
-                argTypes[i].destructorFunction(param);
-              }
-            }
-          }
-  
-          if (returns) {
-            return argTypes[0]['fromWireType'](rv);
-          }
-        }
-  
-        return onDone(rv);
-      };
-      return createNamedFunction(humanName, invokerFn);
-    }
-  
-  
-  var heap32VectorToArray = (count, firstElement) => {
-      var array = [];
-      for (var i = 0; i < count; i++) {
-        // TODO(https://github.com/emscripten-core/emscripten/issues/17310):
-        // Find a way to hoist the `>> 2` or `>> 3` out of this loop.
-        array.push(HEAPU32[(((firstElement)+(i * 4))>>2)]);
-      }
-      return array;
-    };
   
   
   
@@ -3078,6 +3122,8 @@ var wasmImports = {
   _embind_register_bool: __embind_register_bool,
   /** @export */
   _embind_register_class: __embind_register_class,
+  /** @export */
+  _embind_register_class_constructor: __embind_register_class_constructor,
   /** @export */
   _embind_register_class_property: __embind_register_class_property,
   /** @export */

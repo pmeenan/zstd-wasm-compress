@@ -154,10 +154,12 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
 
   // Structures
   class_<ZSTD_inBuffer>("inBuffer")
+    .constructor<>()
     .property("src", &ZSTD_inBuffer_src_getter, &ZSTD_inBuffer_src_setter)
     .property("size", &ZSTD_inBuffer::size)
     .property("pos", &ZSTD_inBuffer::pos);
   class_<ZSTD_outBuffer>("outBuffer")
+    .constructor<>()
     .property("dst", &ZSTD_outBuffer_dst_getter, &ZSTD_outBuffer_dst_setter)
     .property("size", &ZSTD_outBuffer::size)
     .property("pos", &ZSTD_outBuffer::pos);
