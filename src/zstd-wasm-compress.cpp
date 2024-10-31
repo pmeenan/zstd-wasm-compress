@@ -68,6 +68,21 @@ unsigned int _ZSTD_createCDict_byReference(unsigned int dictBuffer, size_t dictS
   return (unsigned int)ZSTD_createCDict_byReference((const void*)dictBuffer, dictSize, compressionLevel);
 }
 
+static unsigned int ZSTD_inBuffer_src_getter(const ZSTD_inBuffer &inBuffer) {
+    return (unsigned int)inBuffer.src;
+}
+
+static void ZSTD_inBuffer_src_setter(ZSTD_inBuffer &inBuffer, unsigned int src) {
+    inBuffer.src = (void *)src;
+}
+
+static unsigned int ZSTD_outBuffer_dst_getter(const ZSTD_outBuffer &outBuffer) {
+    return (unsigned int)outBuffer.dst;
+}
+
+static void ZSTD_outBuffer_dst_setter(ZSTD_outBuffer &outBuffer, unsigned int dst) {
+    outBuffer.dst = (void *)dst;
+}
 
 EMSCRIPTEN_BINDINGS(zstdwasm) {
   // Wrapped functions
@@ -122,4 +137,16 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
   constant("c_contentSizeFlag", ZSTD_c_contentSizeFlag);
   constant("c_checksumFlag", ZSTD_c_checksumFlag);
   constant("c_dictIDFlag", ZSTD_c_dictIDFlag);
+
+  // Structures
+  class_<ZSTD_inBuffer>("inBuffer")
+    .property("src", &ZSTD_inBuffer_src_getter, &ZSTD_inBuffer_src_setter)
+    .property("size", &ZSTD_inBuffer::size)
+    .property("pos", &ZSTD_inBuffer::pos)
+    ;
+  class_<ZSTD_outBuffer>("outBuffer")
+    .property("dst", &ZSTD_outBuffer_dst_getter, &ZSTD_outBuffer_dst_setter)
+    .property("size", &ZSTD_outBuffer::size)
+    .property("pos", &ZSTD_outBuffer::pos)
+    ;
 }
