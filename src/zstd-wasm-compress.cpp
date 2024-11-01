@@ -107,6 +107,7 @@ static void ZSTD_outBuffer_dst_setter(ZSTD_outBuffer &outBuffer, unsigned int ds
 
 EMSCRIPTEN_BINDINGS(zstdwasm) {
   // Wrapped functions
+  function("compressBound", &ZSTD_compressBound);
 	function("compress", &_ZSTD_compress);
 	function("compress2", &_ZSTD_compress2);
 	function("createCCtx", &_ZSTD_createCCtx);
