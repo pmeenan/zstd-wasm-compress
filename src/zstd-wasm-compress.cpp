@@ -72,6 +72,10 @@ unsigned int _ZSTD_createCDict_byReference(unsigned int dictBuffer, size_t dictS
   return (unsigned int)ZSTD_createCDict_byReference((const void*)dictBuffer, dictSize, compressionLevel);
 }
 
+size_t _ZSTD_CCtx_loadDictionary_byReference(unsigned int cctx, unsigned int dict, size_t dictSize) {
+  return ZSTD_CCtx_loadDictionary_byReference((ZSTD_CCtx*) cctx, (const void*) dict, dictSize);
+}
+
 size_t _ZSTD_CCtx_refCDict(unsigned int cctx, unsigned int cdict) {
   return ZSTD_CCtx_refCDict((ZSTD_CCtx*) cctx, (const ZSTD_CDict*)cdict);
 }
@@ -115,6 +119,7 @@ EMSCRIPTEN_BINDINGS(zstdwasm) {
 	function("freeCDict", &_ZSTD_freeCDict);
 	function("compress_usingCDict", &_ZSTD_compress_usingCDict);
 	function("createCDict_byReference", &_ZSTD_createCDict_byReference);
+  function("CCtx_loadDictionary_byReference", &_ZSTD_CCtx_loadDictionary_byReference);
 	function("CCtx_refCDict", &_ZSTD_CCtx_refCDict);
   function("CCtx_refPrefix", &_ZSTD_CCtx_refPrefix);
 
