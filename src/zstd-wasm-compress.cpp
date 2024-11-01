@@ -11,7 +11,7 @@
 
 using namespace emscripten;
 
-size_t _ZSTD_compress(void * output_ptr, int num_bytes, void * input_ptr, int num_bytes_in, int level) {
+size_t _ZSTD_compress(unsigned int output_ptr, int num_bytes, unsigned int input_ptr, int num_bytes_in, int level) {
 	return ZSTD_compress((uint8_t *) output_ptr, num_bytes, (uint8_t *) input_ptr, num_bytes_in, level);
 }
 
@@ -107,7 +107,7 @@ static void ZSTD_outBuffer_dst_setter(ZSTD_outBuffer &outBuffer, unsigned int ds
 
 EMSCRIPTEN_BINDINGS(zstdwasm) {
   // Wrapped functions
-	function("compress", &_ZSTD_compress, allow_raw_pointers());
+	function("compress", &_ZSTD_compress);
 	function("compress2", &_ZSTD_compress2);
 	function("createCCtx", &_ZSTD_createCCtx);
 	function("freeCCtx", &_ZSTD_freeCCtx);
