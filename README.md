@@ -15,11 +15,9 @@ import zstdwasm from "../zstd-wasm-compress/bin/zstdlib.wasm";
 let zstd = null;
 let zstdLoaded = null;
 
-// Initialize wasm outside of a request context
-zstdInit().catch(E => console.log(E));
-
 export default {
     async fetch(request, env, ctx) {
+        zstdInit(ctx).catch(E => console.log(E));
         ...
     }
 }
@@ -37,6 +35,8 @@ async function zstdInit() {
     zstdLoaded = new Promise((res, rej) => {
       resolve = res;
     });
+    // Keep the request alive until wasm loads
+    ctx.waitUntil(zstdLoaded);
     zstd = await zstdlib({
       instantiateWasm(info, receive) {
         let instance = new WebAssembly.Instance(zstdwasm, info);
